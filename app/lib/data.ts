@@ -13,7 +13,13 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function fetchRevenue() {
   try {
-    return await sql<Revenue[]>`SELECT * FROM revenue`;
+    console.log('Fetching revenue data...');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const data = await sql<Revenue[]>`SELECT * FROM revenue`;
+    console.log('Data fetch completed after 5 seconds.');
+
+    return data;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch revenue data.');
@@ -22,12 +28,17 @@ export async function fetchRevenue() {
 
 export async function fetchLatestInvoices() {
   try {
+    console.log('Fetching revenue data...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     const data = await sql<LatestInvoiceRaw[]>`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       ORDER BY invoices.date DESC
       LIMIT 5`;
+
+    console.log("Latest invoces fetch completed after 2 seconds.");
 
     return data.map((invoice) => ({
       ...invoice,
