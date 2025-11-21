@@ -39,10 +39,17 @@ export async function createInvoice(formData: FormData) {
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split("T")[0];
 
-  await sql`
-    INSERT INTO invoices (customer_id, amount, status, date)
-    VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-  `;
+  try {
+    await sql`
+      INSERT INTO invoices (customer_id, amount, status, date)
+      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    `;
+  } catch (error) {
+    console.error(error);
+    return {
+      message: 'Database Error: Failed to Create Invoice.',
+    }; 
+  }
 
   // NextJS has a client-side router CACHE that stores the route segments in the user's browser for
   // a time. Along with prefetching, this cache ensures that users can quickly navigate between routes
@@ -51,6 +58,8 @@ export async function createInvoice(formData: FormData) {
   // we want to CLEAR this cache and trigger a new request to the server.
   revalidatePath("/dashboard/invoices");
 
+  // Call this outside the try/catch block. Because redirect() works by throwing an error,
+  // which would be caught by the 'catch' block.
   redirect("/dashboard/invoices");
 }
 
@@ -63,11 +72,16 @@ export async function updateInvoice(id: string, formData: FormData) {
  
   const amountInCents = amount * 100;
  
-  await sql`
-    UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-    WHERE id = ${id}
-  `;
+  try {
+    await sql`
+      UPDATE invoices
+      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error(error);
+    return { message: 'Database Error: Failed to Update Invoice.' }; 
+  }
  
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
